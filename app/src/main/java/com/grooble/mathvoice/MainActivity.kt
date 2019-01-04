@@ -9,10 +9,13 @@ import org.jetbrains.anko.toast
 import kotlin.random.*
 import android.speech.RecognizerIntent
 import android.content.Intent
+import android.util.Log
 import com.grooble.mathvoice.NumberParser
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.debug
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AnkoLogger {
 
     private lateinit var submitButton: Button
     private lateinit var problemView : TextView
@@ -26,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // setup random problem
-        problemView = findViewById(R.id.sum_text) as TextView
+        problemView = findViewById(R.id.sum_text)
         problemView.text = makeQuestion()
 
         // touch answer panel to start voice recognition
@@ -36,14 +39,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Click to accept answer
-        submitButton = findViewById(R.id.submit_button) as Button
+        submitButton = findViewById(R.id.submit_button)
         submitButton.setOnClickListener{
             toast("hi there")
         }
     }
     fun makeQuestion(): String{
-        val first : Int = Random.nextInt()
-        val second : Int = Random.nextInt()
+        val first : Int = Random.nextInt(1, 10)
+        val second : Int = Random.nextInt(1, 10)
         mAnswer = first + second
         return first.toString() + " + " + second.toString()
     }
@@ -63,11 +66,12 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == REQUEST_SPEECH_RECOGNIZER) {
             if (resultCode == Activity.RESULT_OK) {
                 val results = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                val voiceAnswer = NumberParser().parseInput(results[0]).toInt()
+                val voiceAnswer = results[0].toInt()
+                debug("""voice answer: $voiceAnswer""")
 
-                if (mAnswer == voiceAnswer)
-                    mTextView.text = "\n\n" + mAnswer +
-                            "\n\ncorrect"
+                if (mAnswer == voiceAnswer) {
+                    mTextView.text = "\n\n$mAnswer\n\ncorrect"
+                }
                 else
                     mTextView.text = "\n\n" + mAnswer + "\n\nincorrect!"
             }
