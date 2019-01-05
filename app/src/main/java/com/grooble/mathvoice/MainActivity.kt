@@ -38,6 +38,12 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
             startSpeechRecognizer()
         }
 
+        // touch question panel to load new question
+        problemView.setOnClickListener {
+            problemView.text = makeQuestion()
+            mTextView.text = "answer"
+        }
+
         // Click to accept answer
         submitButton = findViewById(R.id.submit_button)
         submitButton.setOnClickListener{
@@ -66,14 +72,32 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
         if (requestCode == REQUEST_SPEECH_RECOGNIZER) {
             if (resultCode == Activity.RESULT_OK) {
                 val results = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                val voiceAnswer = results[0].toInt()
+                val voiceAnswer = results[0]
                 debug("""voice answer: $voiceAnswer""")
+                val answerList = voiceAnswer.toString().split(" ")
+                var answerNumber = ""
 
-                if (mAnswer == voiceAnswer) {
+                if(answerList.size==1){
+                    answerNumber = answerList[0]
+                }
+                else {
+                    for (i in answerList.indices) {
+                        if ((answerList[i] == "equals") && ((answerList.size - 1) > i)) {
+                            answerNumber = answerList[answerList.lastIndex]
+                        }
+                    }
+                }
+
+                val answerNumberCheck = answerNumber.toIntOrNull()
+                if(answerNumberCheck == null){
+                    mTextView.text = "try again?"
+                }
+                if (mAnswer == answerNumberCheck) {
                     mTextView.text = "\n\n$mAnswer\n\ncorrect"
                 }
-                else
+                else {
                     mTextView.text = "\n\n" + mAnswer + "\n\nincorrect!"
+                }
             }
         }
     }
