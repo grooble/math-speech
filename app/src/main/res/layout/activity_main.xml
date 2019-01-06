@@ -6,11 +6,46 @@
                                              android:layout_height="match_parent"
                                              tools:context=".MainActivity">
 
+    <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/radio_group"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintHeight_percent="0.1"
+                android:orientation="horizontal"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                android:checkedButton="@+id/addition_button">
+        <RadioButton android:id="@+id/addition_button"
+                     android:layout_width="0dp"
+                     android:layout_height="match_parent"
+                     android:text="@string/addition"
+                     android:textSize="28dp"
+                     android:layout_weight="1"
+                     android:onClick="onRadioButtonClicked" />
+        <RadioButton android:id="@+id/subtraction_button"
+                     android:layout_width="0dp"
+                     android:layout_height="match_parent"
+                     android:layout_weight="1"
+                     app:layout_constraintLeft_toLeftOf="@id/addition_button"
+                     android:text="@string/subtraction"
+                     android:textSize="28dp"
+                     android:onClick="onRadioButtonClicked"/>
+        <RadioButton android:id="@+id/multiplication_button"
+                     android:layout_width="0dp"
+                     android:layout_height="match_parent"
+                     android:layout_weight="1"
+                     app:layout_constraintLeft_toLeftOf="@id/subtraction_button"
+                     android:text="@string/multiplication"
+                     android:textSize="28dp"
+                     android:onClick="onRadioButtonClicked"/>
+    </RadioGroup>
+
     <TextView
             android:id="@+id/sum_text"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintHeight_percent="0.5"
+            app:layout_constraintHeight_percent="0.4"
             app:layout_constraintWidth_percent="0.75"
             android:text="Hello World!"
             android:textSize="72dp"
@@ -18,42 +53,41 @@
             android:gravity="center"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/radio_group" />
     <TextView
             android:id="@+id/equals_sign_text"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintHeight_percent="0.5"
-            app:layout_constraintWidth_percent="0.25"
+            app:layout_constraintHeight_percent="0.4"
+            app:layout_constraintWidth_percent="0.3"
             android:text="="
             android:textSize="72dp"
             android:textAlignment="center"
             android:gravity="center"
-            android:background="@color/colorPrimary"
             app:layout_constraintTop_toBottomOf="@+id/sum_text"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent" />
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/answer_text"/>
     <TextView
             android:id="@+id/answer_text"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintHeight_percent="0.5"
-            app:layout_constraintWidth_percent="0.5"
+            app:layout_constraintHeight_percent="0.4"
+            app:layout_constraintWidth_percent="0.7"
             android:text="answer!"
             android:textSize="48dp"
             android:textAlignment="center"
             android:gravity="center"
             app:layout_constraintTop_toBottomOf="@id/sum_text"
-            app:layout_constraintLeft_toRightOf="@id/equals_sign_text" />
-    <Button
-            android:id="@+id/submit_button"
+            app:layout_constraintLeft_toRightOf="@id/equals_sign_text"
+            app:layout_constraintRight_toRightOf="parent" />
+    <TextView
+            android:id="@+id/result_text"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintHeight_percent="0.5"
-            app:layout_constraintWidth_percent="0.25"
-            android:text="Click me!"
-            android:textSize="24dp"
-            app:layout_constraintTop_toBottomOf="@id/sum_text"
-            app:layout_constraintLeft_toRightOf="@id/answer_text" />
+            app:layout_constraintHeight_percent="0.1"
+            app:layout_constraintTop_toBottomOf="@id/equals_sign_text"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+    />
 
 </android.support.constraint.ConstraintLayout>

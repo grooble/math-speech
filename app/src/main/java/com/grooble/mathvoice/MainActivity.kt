@@ -9,52 +9,95 @@ import org.jetbrains.anko.toast
 import kotlin.random.*
 import android.speech.RecognizerIntent
 import android.content.Intent
-import android.util.Log
-import com.grooble.mathvoice.NumberParser
+import android.view.View
+import android.widget.RadioButton
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.debug
 
 
 class MainActivity : AppCompatActivity(), AnkoLogger {
 
-    private lateinit var submitButton: Button
+    private val operations = arrayOf("addition", "subtraction", "multiplication", "division")
     private lateinit var problemView : TextView
     private lateinit var answerView: TextView
+    private lateinit var resultView: TextView
     private val REQUEST_SPEECH_RECOGNIZER : Int = 3000
-    private lateinit var mTextView : TextView
     private var mAnswer : Int = 0
+    private var operation = "addition"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // setup random problem
+        // setup initial problem: addition
         problemView = findViewById(R.id.sum_text)
-        problemView.text = makeQuestion()
+        problemView.text = makeQuestion(operations[0])
 
         // touch answer panel to start voice recognition
-        mTextView = findViewById(R.id.answer_text)
-        mTextView.setOnClickListener{
+        answerView = findViewById(R.id.answer_text)
+        answerView.setOnClickListener{
             startSpeechRecognizer()
         }
 
         // touch question panel to load new question
         problemView.setOnClickListener {
-            problemView.text = makeQuestion()
-            mTextView.text = "answer"
+            problemView.text = makeQuestion(operation)
+            answerView.text = "answer"
         }
 
-        // Click to accept answer
-        submitButton = findViewById(R.id.submit_button)
-        submitButton.setOnClickListener{
-            toast("hi there")
+        // initialize result text view
+        resultView = findViewById(R.id.result_text)
+
+    }
+
+    // respond to clicks of the radio button selector
+    fun onRadioButtonClicked(view: View) {
+        if (view is RadioButton) {
+            // Is the button now checked?
+            val checked = view.isChecked
+
+            // Check which radio button was clicked
+            when (view.getId()) {
+                R.id.addition_button ->
+                    if (checked) {
+                        operation = operations[0]
+                    }
+                R.id.subtraction_button ->
+                    if (checked) {
+                        operation = operations[1]
+                    }
+                R.id.multiplication_button ->
+                    if (checked) {
+                        operation = operations[2]
+                    }
+            }
         }
     }
-    fun makeQuestion(): String{
-        val first : Int = Random.nextInt(1, 10)
-        val second : Int = Random.nextInt(1, 10)
-        mAnswer = first + second
-        return first.toString() + " + " + second.toString()
+
+    // return String representing the question
+    fun makeQuestion(operation : String): String{
+        var first : Int = Random.nextInt(1, 10)
+        var second : Int = Random.nextInt(1, 10)
+
+        return when (operations.indexOf(operation)) {
+            1 -> {
+                if(first < second){
+                    var temp = first
+                    first = second
+                    second = temp
+                }
+                mAnswer = first - second
+                first.toString() + " - " + second.toString()
+            }
+            2 -> {
+                mAnswer = first*second
+                first.toString() + " X " + second.toString()
+            }
+            else -> {
+                mAnswer = first + second
+                first.toString() + " + " + second.toString()
+            }
+        }
     }
 
     private fun startSpeechRecognizer() {
@@ -90,13 +133,15 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
 
                 val answerNumberCheck = answerNumber.toIntOrNull()
                 if(answerNumberCheck == null){
-                    mTextView.text = "try again?"
+                    answerView.text = "try again?"
                 }
                 if (mAnswer == answerNumberCheck) {
-                    mTextView.text = "\n\n$mAnswer\n\ncorrect"
+                    answerView.text = answerNumberCheck.toString()
+                    resultView.text = getString(R.string.correct)
                 }
                 else {
-                    mTextView.text = "\n\n" + mAnswer + "\n\nincorrect!"
+                    answerView.text = answerNumberCheck.toString()
+                    resultView.text = getString(R.string.incorrect)
                 }
             }
         }

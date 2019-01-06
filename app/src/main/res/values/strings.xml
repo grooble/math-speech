@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">MathVoice</string>
+    <string name="addition">+</string>
+    <string name="subtraction">-</string>
+    <string name="multiplication">X</string>
+    <string name="division">/</string>
+    <string name="correct">correct</string>
+    <string name="incorrect">incorrect</string>
 </resources>
