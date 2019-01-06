@@ -1,33 +1,130 @@
 package com.grooble.mathvoice
 
+import android.Manifest
+import android.annotation.TargetApi
 import android.app.Activity
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
 import android.widget.TextView
-import org.jetbrains.anko.toast
 import kotlin.random.*
 import android.speech.RecognizerIntent
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.provider.MediaStore
+import android.speech.RecognitionListener
 import android.view.View
 import android.widget.RadioButton
 import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.debug
+import org.jetbrains.anko.info
+import android.speech.SpeechRecognizer
+import android.support.v4.content.ContextCompat
+import android.util.Log
+import java.util.ArrayList
 
 
-class MainActivity : AppCompatActivity(), AnkoLogger {
+class MainActivity : Activity(), AnkoLogger, RecognitionListener {
+
+    private val PERMISSIONS_REQUEST_INTERNET = 300
+    private val PERMISSIONS_REQUEST_RECORD_AUDIO = 400
+    private val ASK_MULTIPLE_PERMISSION_REQUEST_CODE = 500
 
     private val operations = arrayOf("addition", "subtraction", "multiplication", "division")
     private lateinit var problemView : TextView
     private lateinit var answerView: TextView
     private lateinit var resultView: TextView
-    private val REQUEST_SPEECH_RECOGNIZER : Int = 3000
+    //private val REQUEST_SPEECH_RECOGNIZER : Int = 3000
     private var mAnswer : Int = 0
     private var operation = "addition"
+    private lateinit var speech: SpeechRecognizer
+    private var message: Int = 0
+
+
+    override fun onRmsChanged(p0: Float) {}
+    override fun onBufferReceived(p0: ByteArray?) {}
+    override fun onPartialResults(p0: Bundle?) {}
+    override fun onEvent(p0: Int, p1: Bundle?) {}
+    override fun onBeginningOfSpeech() {}
+    override fun onEndOfSpeech() {}
+
+    override fun onError(errorCode: Int) {
+
+        when (errorCode) {
+
+            SpeechRecognizer.ERROR_AUDIO ->
+                info(R.string.error_audio)
+
+            SpeechRecognizer.ERROR_CLIENT ->
+                info(R.string.error_client)
+
+            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
+                info(R.string.error_insufficient_permissions)
+
+            SpeechRecognizer.ERROR_NETWORK ->
+                info(R.string.error_network)
+
+            SpeechRecognizer.ERROR_NETWORK_TIMEOUT ->
+                info(R.string.error_network_timeout)
+
+            SpeechRecognizer.ERROR_NO_MATCH ->
+                info(R.string.error_no_match)
+
+            SpeechRecognizer.ERROR_RECOGNIZER_BUSY ->
+                info(R.string.error_recognizer_busy)
+
+            SpeechRecognizer.ERROR_SERVER ->
+                info(R.string.error_server)
+
+            SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
+                info(R.string.error_speech_timeout)
+
+            else ->
+                info(R.string.error_understand)
+        }
+    }
+
+    override fun onResults(data: Bundle?) {
+        info("in onResults")
+        val results = data!!.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+        val voiceAnswer = results[0]
+        info("""voice answer: $voiceAnswer""")
+        val answerList = voiceAnswer.toString().split(" ")
+        var answerNumber = ""
+
+        if (answerList.size == 1) {
+            answerNumber = answerList[0]
+        } else {
+            for (i in answerList.indices) {
+                if ((answerList[i] == "equals") && ((answerList.size - 1) > i)) {
+                    answerNumber = answerList[answerList.lastIndex]
+                }
+            }
+        }
+
+        val answerNumberCheck = answerNumber.toIntOrNull()
+        if (answerNumberCheck == null) {
+            answerView.text = "try again?"
+        }
+        if (mAnswer == answerNumberCheck) {
+            answerView.text = answerNumberCheck.toString()
+            resultView.text = getString(R.string.correct)
+        } else {
+            answerView.text = answerNumberCheck.toString()
+            resultView.text = getString(R.string.incorrect)
+        }
+    }
+
+    override fun onReadyForSpeech(p0: Bundle?) {
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // setup speech recognition
+        speech = SpeechRecognizer.createSpeechRecognizer(this)
+        speech.setRecognitionListener(this)
+
 
         // setup initial problem: addition
         problemView = findViewById(R.id.sum_text)
@@ -36,6 +133,10 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
         // touch answer panel to start voice recognition
         answerView = findViewById(R.id.answer_text)
         answerView.setOnClickListener{
+            info("calling startListening in onCreate")
+            //startSpeechRecognizer()
+            //intent.putExtra(RecognizerIntent.EXTRA_PROMPT, mQuestion)
+            //startActivityForResult(intent, REQUEST_SPEECH_RECOGNIZER)
             startSpeechRecognizer()
         }
 
@@ -47,7 +148,6 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
 
         // initialize result text view
         resultView = findViewById(R.id.result_text)
-
     }
 
     // respond to clicks of the radio button selector
@@ -100,50 +200,56 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
         }
     }
 
-    private fun startSpeechRecognizer() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        //intent.putExtra(RecognizerIntent.EXTRA_PROMPT, mQuestion)
-        startActivityForResult(intent, REQUEST_SPEECH_RECOGNIZER)
-    }
+    @TargetApi(23)
+    fun startSpeechRecognizer() {
+        info("useInternet")
+        val permissionRequest = ArrayList<String>()
+        var permissionCode = 0
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int,
-                                  data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == REQUEST_SPEECH_RECOGNIZER) {
-            if (resultCode == Activity.RESULT_OK) {
-                val results = data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                val voiceAnswer = results[0]
-                debug("""voice answer: $voiceAnswer""")
-                val answerList = voiceAnswer.toString().split(" ")
-                var answerNumber = ""
-
-                if(answerList.size==1){
-                    answerNumber = answerList[0]
-                }
-                else {
-                    for (i in answerList.indices) {
-                        if ((answerList[i] == "equals") && ((answerList.size - 1) > i)) {
-                            answerNumber = answerList[answerList.lastIndex]
-                        }
-                    }
-                }
-
-                val answerNumberCheck = answerNumber.toIntOrNull()
-                if(answerNumberCheck == null){
-                    answerView.text = "try again?"
-                }
-                if (mAnswer == answerNumberCheck) {
-                    answerView.text = answerNumberCheck.toString()
-                    resultView.text = getString(R.string.correct)
-                }
-                else {
-                    answerView.text = answerNumberCheck.toString()
-                    resultView.text = getString(R.string.incorrect)
-                }
+        // Check the SDK version and whether the permission is already granted or not.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.INTERNET
+            ) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                this, Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED)
+        ) {
+            // the above needs to check for already received permissions
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.INTERNET
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionRequest.add(Manifest.permission.INTERNET)
+                permissionCode = PERMISSIONS_REQUEST_INTERNET
             }
-        }
+
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.RECORD_AUDIO
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionRequest.add(Manifest.permission.RECORD_AUDIO)
+                permissionCode = PERMISSIONS_REQUEST_RECORD_AUDIO
+            }
+
+            if (permissionRequest.size != 0) {
+                if (permissionRequest.size > 1) {
+                    permissionCode = ASK_MULTIPLE_PERMISSION_REQUEST_CODE
+                }
+                info("Requesting permissions")
+                requestPermissions(permissionRequest.toTypedArray(), permissionCode)
+            }
+        } else {
+            // Android version is lesser than 6.0 or the permission is already granted.
+            // Start intent for camera app on click of user profile pic
+            info( "Permissions OK; calling speech recognition intent")
+            var intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,
+                this.packageName)
+
+            speech.startListening(intent)
+        }//After this point, wait for callback in onRequestPermissionsResult(int, String[], int[]) overridden method
     }
 }
