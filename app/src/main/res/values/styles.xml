@@ -8,4 +8,12 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="CorrectText" parent="TextAppearance.AppCompat">
+        <item name="android:color">@color/correctBlue</item>
+        <item name="android:textSize">28dp</item>
+    </style>
+    <style name="IncorrectText" parent="TextAppearance.AppCompat">
+        <item name="android:color">@color/incorrectRed</item>
+        <item name="android:textSize">28dp</item>
+    </style>
 </resources>

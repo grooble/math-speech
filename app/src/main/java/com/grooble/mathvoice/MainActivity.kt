@@ -9,6 +9,7 @@ import kotlin.random.*
 import android.speech.RecognizerIntent
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Typeface
 import android.os.Build
 import android.provider.MediaStore
 import android.speech.RecognitionListener
@@ -19,6 +20,9 @@ import org.jetbrains.anko.info
 import android.speech.SpeechRecognizer
 import android.support.v4.content.ContextCompat
 import android.util.Log
+import android.view.Gravity
+import org.jetbrains.anko.backgroundColor
+import org.jetbrains.anko.textColor
 import java.util.ArrayList
 
 
@@ -32,12 +36,9 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
     private lateinit var problemView : TextView
     private lateinit var answerView: TextView
     private lateinit var resultView: TextView
-    //private val REQUEST_SPEECH_RECOGNIZER : Int = 3000
     private var mAnswer : Int = 0
     private var operation = "addition"
     private lateinit var speech: SpeechRecognizer
-    private var message: Int = 0
-
 
     override fun onRmsChanged(p0: Float) {}
     override fun onBufferReceived(p0: ByteArray?) {}
@@ -107,9 +108,18 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
         if (mAnswer == answerNumberCheck) {
             answerView.text = answerNumberCheck.toString()
             resultView.text = getString(R.string.correct)
+            resultView.gravity = Gravity.CENTER
+            resultView.typeface = Typeface.DEFAULT
+            resultView.backgroundColor = ContextCompat.getColor(this, R.color.correctBlue)
+            resultView.textColor = ContextCompat.getColor(this, R.color.white)
+
         } else {
             answerView.text = answerNumberCheck.toString()
             resultView.text = getString(R.string.incorrect)
+            resultView.gravity = Gravity.CENTER
+            resultView.typeface = Typeface.DEFAULT
+            resultView.backgroundColor = ContextCompat.getColor(this, R.color.incorrectRed)
+            resultView.textColor = ContextCompat.getColor(this, R.color.white)
         }
     }
 
@@ -134,9 +144,6 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
         answerView = findViewById(R.id.answer_text)
         answerView.setOnClickListener{
             info("calling startListening in onCreate")
-            //startSpeechRecognizer()
-            //intent.putExtra(RecognizerIntent.EXTRA_PROMPT, mQuestion)
-            //startActivityForResult(intent, REQUEST_SPEECH_RECOGNIZER)
             startSpeechRecognizer()
         }
 
@@ -144,6 +151,8 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
         problemView.setOnClickListener {
             problemView.text = makeQuestion(operation)
             answerView.text = "answer"
+            resultView.text = ""
+            resultView.backgroundColor = ContextCompat.getColor(this, R.color.white)
         }
 
         // initialize result text view
@@ -250,6 +259,6 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
                 this.packageName)
 
             speech.startListening(intent)
-        }//After this point, wait for callback in onRequestPermissionsResult(int, String[], int[]) overridden method
+        }
     }
 }
