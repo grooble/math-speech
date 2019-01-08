@@ -3,7 +3,7 @@
     <string name="addition">+</string>
     <string name="subtraction">-</string>
     <string name="multiplication">X</string>
-    <string name="division">/</string>
+    <string name="random">\?</string>
     <string name="correct">correct</string>
     <string name="incorrect">incorrect</string>
     <string name="error_audio">error: audio</string>

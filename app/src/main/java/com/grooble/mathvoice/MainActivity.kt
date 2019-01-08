@@ -32,7 +32,7 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
     private val PERMISSIONS_REQUEST_RECORD_AUDIO = 400
     private val ASK_MULTIPLE_PERMISSION_REQUEST_CODE = 500
 
-    private val operations = arrayOf("addition", "subtraction", "multiplication", "division")
+    private val operations = arrayOf("addition", "subtraction", "multiplication", "random")
     private lateinit var problemView : TextView
     private lateinit var answerView: TextView
     private lateinit var resultView: TextView
@@ -179,6 +179,10 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
                     if (checked) {
                         operation = operations[2]
                     }
+                R.id.random_button ->
+                    if (checked) {
+                        operation = operations[3]
+                    }
             }
         }
     }
@@ -201,6 +205,11 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
             2 -> {
                 mAnswer = first*second
                 first.toString() + " X " + second.toString()
+            }
+            3 -> {
+                val rand : Int = Random.nextInt(0, 3)
+                info("Random: $rand")
+                makeQuestion(operations[rand])
             }
             else -> {
                 mAnswer = first + second
