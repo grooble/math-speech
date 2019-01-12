@@ -23,7 +23,8 @@ import android.util.Log
 import android.view.Gravity
 import org.jetbrains.anko.backgroundColor
 import org.jetbrains.anko.textColor
-import java.util.ArrayList
+import java.util.*
+import kotlin.random.Random
 
 
 class MainActivity : Activity(), AnkoLogger, RecognitionListener {
@@ -83,22 +84,59 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        if(speech != null){
+            speech.stopListening()
+            speech.cancel()
+            speech.destroy()
+        }
+    }
     override fun onResults(data: Bundle?) {
         info("in onResults")
         val results = data!!.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         val voiceAnswer = results[0]
         info("""voice answer: $voiceAnswer""")
-        val answerList = voiceAnswer.toString().split(" ")
+        // for English
+        //val answerList = voiceAnswer.toString().split(" ")
         var answerNumber = ""
 
+        /*
         if (answerList.size == 1) {
+            info("answer size = ${answerList.size}")
             answerNumber = answerList[0]
         } else {
             for (i in answerList.indices) {
-                if ((answerList[i] == "equals") && ((answerList.size - 1) > i)) {
+                println("components: $i")
+                if (((answerList[i] == "は")||(answerList[i] == "=")) && ((answerList.size - 1) > i)) {
                     answerNumber = answerList[answerList.lastIndex]
                 }
+            } */
+            // for Japanese
+        // answer is not valid Int, so must be a sentence
+        if(voiceAnswer.toIntOrNull() == null) {
+            info("voiceAnswer not parsable to Int")
+            val index = voiceAnswer.lastIndexOf("は")
+            if (index != -1) {
+                info("found \"は\" in answer")
+                answerNumber = voiceAnswer.substring(index + 1)
+                info("answer: $answerNumber")
+            } else
+            // test for "=" as sum delimiter, instead of "は"
+            {
+                info("testing for \"=\" in voiceAnswer")
+                val index2 = voiceAnswer.lastIndexOf("=")
+                if (index2 != -1) {
+                    info("found \"=\" in voiceAnswer")
+                    answerNumber = voiceAnswer.substring(index2 + 1)
+                    info("answer = $answerNumber")
+                }
             }
+        }
+        // Int returned so can convert
+        else {
+            info("voiceAnswer parsable to Int: ${voiceAnswer.trim()}")
+            answerNumber = voiceAnswer.trim()
         }
 
         val answerNumberCheck = answerNumber.toIntOrNull()
@@ -264,6 +302,7 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
             var intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ja_JP");
             intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,
                 this.packageName)
 
