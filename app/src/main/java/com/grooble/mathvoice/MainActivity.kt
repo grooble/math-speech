@@ -3,25 +3,22 @@ package com.grooble.mathvoice
 import android.Manifest
 import android.annotation.TargetApi
 import android.app.Activity
-import android.os.Bundle
-import android.widget.TextView
-import kotlin.random.*
-import android.speech.RecognizerIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Build
-import android.provider.MediaStore
+import android.os.Bundle
 import android.speech.RecognitionListener
-import android.view.View
-import android.widget.RadioButton
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.info
+import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.support.v4.content.ContextCompat
-import android.util.Log
 import android.view.Gravity
+import android.view.View
+import android.widget.RadioButton
+import android.widget.TextView
+import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.backgroundColor
+import org.jetbrains.anko.info
 import org.jetbrains.anko.textColor
 import java.util.*
 import kotlin.random.Random
@@ -97,9 +94,9 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
         val results = data!!.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         val voiceAnswer = results[0]
         info("""voice answer: $voiceAnswer""")
+        var answerNumber = ""
         // for English
         //val answerList = voiceAnswer.toString().split(" ")
-        var answerNumber = ""
 
         /*
         if (answerList.size == 1) {
@@ -112,11 +109,15 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
                     answerNumber = answerList[answerList.lastIndex]
                 }
             } */
-            // for Japanese
+
+        // for Japanese
         // answer is not valid Int, so must be a sentence
         if(voiceAnswer.toIntOrNull() == null) {
             info("voiceAnswer not parsable to Int")
-            val index = voiceAnswer.lastIndexOf("は")
+            // "は" for addition and subtraction and "が" for multiplication
+            val index = maxOf(voiceAnswer.lastIndexOf("は"),
+                              voiceAnswer.lastIndexOf("が")
+            )
             if (index != -1) {
                 info("found \"は\" in answer")
                 answerNumber = voiceAnswer.substring(index + 1)
@@ -126,13 +127,17 @@ class MainActivity : Activity(), AnkoLogger, RecognitionListener {
             {
                 info("testing for \"=\" in voiceAnswer")
                 val index2 = voiceAnswer.lastIndexOf("=")
-                if (index2 != -1) {
+                if (index2 != -1) { // "=" was found
                     info("found \"=\" in voiceAnswer")
                     answerNumber = voiceAnswer.substring(index2 + 1)
                     info("answer = $answerNumber")
                 }
+                else{
+                    // to do: try from the lookup table
+                }
             }
         }
+
         // Int returned so can convert
         else {
             info("voiceAnswer parsable to Int: ${voiceAnswer.trim()}")
